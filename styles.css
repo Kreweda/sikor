@@ -1,0 +1,41 @@
+body {
+    background-color: #000;
+    color: #fff;
+    font-family: 'Arial', sans-serif;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    margin: 0;
+}
+
+.container {
+    text-align: center;
+}
+
+.battery {
+    width: 200px;
+    height: 30px;
+    border: 2px solid #fff;
+    margin: 20px auto;
+    position: relative;
+}
+
+#battery-bar {
+    height: 100%;
+    background-color: green;
+    width: 100%;
+}
+
+#battery-percentage {
+    position: absolute;
+    top: 5px;
+    left: 5px;
+}
+
+button {
+    margin: 10px;
+    padding: 10px 20px;
+    font-size: 16px;
+    cursor: pointer;
+}
