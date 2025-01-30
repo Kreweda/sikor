@@ -2,21 +2,28 @@ let currentTime = 0; // 0 to 360 (0:00 to 6:00)
 let battery = 100;
 let lightOn = false;
 let nightTitles = [
-    "Noc 1. Zjawa Koteu",
-    "Noc 2. Wybiła godzina 00.",
-    "Noc 3. Śmiech na (nie) pustej sali.",
-    "Noc 4. Zmiana szychty.",
-    "Noc 5. Freddie czy to ty?",
-    "Noc 6. Bal u Freddiego"
+    "1. Zjawa Koteu",
+    "2. Wybiła godzina 00.",
+    "3. Śmiech na (nie) pustej sali.",
+    "4. Zmiana szychty.",
+    "5. Freddie czy to ty?",
+    "6. Bal u Freddiego"
 ];
 let nightIndex = 0;
 let batteryInterval;
-let mediaStreamTrack;
+let mediaStream;
 
+// Ustawienie tła
 document.body.style.background = "url('https://th.bing.com/th/id/OIP.ytnveQd4rygRjC3qN24NpwHaEK?w=292&h=180&c=7&r=0&o=5&dpr=1.3&pid=1.7') no-repeat center center fixed";
 document.body.style.backgroundSize = "cover";
+document.body.style.backgroundColor = "#000";
 
-document.body.style.backgroundColor = "#000"; // Dodatkowy fallback dla ciemnego tła
+document.getElementById("time").style.position = "absolute";
+document.getElementById("time").style.top = "10px";
+document.getElementById("time").style.right = "10px";
+document.getElementById("time").style.fontSize = "32px";
+document.getElementById("time").style.fontFamily = "Arial, sans-serif";
+document.getElementById("time").style.color = "#fff";
 
 const timeLabel = document.getElementById("time");
 const batteryBar = document.getElementById("battery-bar");
@@ -33,16 +40,13 @@ attackButton.addEventListener("click", attack);
 async function togglePhoneFlashlight(enable) {
     try {
         if (enable) {
-            const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } });
-            mediaStreamTrack = stream.getVideoTracks()[0];
-            const imageCapture = new ImageCapture(mediaStreamTrack);
-            const photoCapabilities = await imageCapture.getPhotoCapabilities();
-            if (photoCapabilities.torch) {
-                await mediaStreamTrack.applyConstraints({ advanced: [{ torch: true }] });
-            }
+            mediaStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment", torch: true } });
+            let track = mediaStream.getVideoTracks()[0];
+            await track.applyConstraints({ advanced: [{ torch: true }] });
         } else {
-            if (mediaStreamTrack) {
-                mediaStreamTrack.stop();
+            if (mediaStream) {
+                mediaStream.getTracks().forEach(track => track.stop());
+                mediaStream = null;
             }
         }
     } catch (error) {
@@ -59,7 +63,7 @@ function startNight() {
     updateNightTitle();
     updateBatteryDisplay();
     updateTime();
-    startBatteryDrain(6000); // Start with 1% per 6 seconds
+    startBatteryDrain(6000);
 }
 
 function updateTime() {
@@ -75,7 +79,7 @@ function updateTime() {
 }
 
 function startBatteryDrain(interval) {
-    clearInterval(batteryInterval); // Reset timer
+    clearInterval(batteryInterval);
     batteryInterval = setInterval(() => {
         if (battery > 0) {
             battery -= 1;
@@ -101,7 +105,7 @@ function toggleLight() {
         lightOn = !lightOn;
         lightButton.textContent = lightOn ? "Wyłącz latarkę" : "Włącz latarkę";
         togglePhoneFlashlight(lightOn);
-        startBatteryDrain(lightOn ? 3000 : 6000); // 1% per 3s if light on, else 1% per 6s
+        startBatteryDrain(lightOn ? 3000 : 6000);
     }
 }
 
