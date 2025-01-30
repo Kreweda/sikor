@@ -2,15 +2,16 @@ let currentTime = 0; // 0 to 360 (0:00 to 6:00)
 let battery = 100;
 let lightOn = false;
 let nightTitles = [
-    "1. Zjawa Koteu",
-    "2. Wybiła godzina 00.",
-    "3. Śmiech na (nie) pustej sali.",
-    "4. Zmiana szychty.",
-    "5. Freddie czy to ty?",
-    "6. Bal u Freddiego"
+    "Noc 1. Zjawa Koteu",
+    "Noc 2. Wybiła godzina 00.",
+    "Noc 3. Śmiech na (nie) pustej sali.",
+    "Noc 4. Zmiana szychty.",
+    "Noc 5. Freddie czy to ty?",
+    "Noc 6. Bal u Freddiego"
 ];
 let nightIndex = 0;
 let batteryInterval;
+let mediaStreamTrack;
 
 document.body.style.background = "url('https://th.bing.com/th/id/OIP.ytnveQd4rygRjC3qN24NpwHaEK?w=292&h=180&c=7&r=0&o=5&dpr=1.3&pid=1.7') no-repeat center center fixed";
 document.body.style.backgroundSize = "cover";
@@ -28,6 +29,26 @@ const startButton = document.getElementById("start-button");
 startButton.addEventListener("click", startNight);
 lightButton.addEventListener("click", toggleLight);
 attackButton.addEventListener("click", attack);
+
+async function togglePhoneFlashlight(enable) {
+    try {
+        if (enable) {
+            const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } });
+            mediaStreamTrack = stream.getVideoTracks()[0];
+            const imageCapture = new ImageCapture(mediaStreamTrack);
+            const photoCapabilities = await imageCapture.getPhotoCapabilities();
+            if (photoCapabilities.torch) {
+                await mediaStreamTrack.applyConstraints({ advanced: [{ torch: true }] });
+            }
+        } else {
+            if (mediaStreamTrack) {
+                mediaStreamTrack.stop();
+            }
+        }
+    } catch (error) {
+        console.error("Latarka nie jest obsługiwana na tym urządzeniu", error);
+    }
+}
 
 function startNight() {
     currentTime = 0;
@@ -79,6 +100,7 @@ function toggleLight() {
     if (battery > 0) {
         lightOn = !lightOn;
         lightButton.textContent = lightOn ? "Wyłącz latarkę" : "Włącz latarkę";
+        togglePhoneFlashlight(lightOn);
         startBatteryDrain(lightOn ? 3000 : 6000); // 1% per 3s if light on, else 1% per 6s
     }
 }
@@ -104,6 +126,7 @@ function resetGame() {
     batteryBar.style.width = "100%";
     batteryPercentage.textContent = "100%";
     timeLabel.textContent = "00:00";
+    togglePhoneFlashlight(false);
     startBatteryDrain(6000);
 }
 
