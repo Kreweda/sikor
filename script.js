@@ -9,7 +9,7 @@ let nightTitles = [
     "5. Freddie czy to ty?",
     "6. Bal u Freddiego"
 ];
-let nightIndex = 0;
+let nightIndex = 0; // Zmieniamy indeks tytułów nocy
 let batteryInterval;
 let mediaStream;
 
@@ -57,10 +57,10 @@ async function togglePhoneFlashlight(enable) {
 function startNight() {
     currentTime = 0;
     battery = 100;
-    nightIndex = 0;
     lightOn = false;
     lightButton.textContent = "Włącz latarkę";
-    updateNightTitle();
+    lightButton.disabled = false; // Upewniamy się, że przy rozpoczęciu nocy latarka może być włączona
+    updateNightTitle(); // Pokazujemy tytuł aktualnej nocy
     updateBatteryDisplay();
     updateTime();
     startBatteryDrain(6000);
@@ -87,8 +87,9 @@ function startBatteryDrain(interval) {
             if (battery <= 0) {
                 battery = 0;
                 clearInterval(batteryInterval);
-                lightButton.disabled = true;
-                attack();
+                lightButton.disabled = true; // Latarka jest wyłączona, gdy bateria rozładowana
+                lightOn = false; // Wyłączamy latarkę
+                togglePhoneFlashlight(false);
             }
         }
     }, interval);
@@ -101,12 +102,29 @@ function updateBatteryDisplay() {
 }
 
 function toggleLight() {
-    if (battery > 0) {
+    if (battery > 0 && !lightButton.disabled) { // Latarka działa tylko, jeśli bateria > 0 i latarka nie jest wyłączona
         lightOn = !lightOn;
         lightButton.textContent = lightOn ? "Wyłącz latarkę" : "Włącz latarkę";
         togglePhoneFlashlight(lightOn);
-        startBatteryDrain(lightOn ? 3000 : 6000);
+        startBatteryDrain(lightOn ? 3000 : 6000); // Szybszy drain, jeśli latarka włączona
     }
+
+    // Easter egg: jeśli latarka jest wyłączona, ale kliknięto przycisk, pokaż zabawną wiadomość
+    if (!lightOn) {
+        showEasterEgg();
+    }
+}
+
+function showEasterEgg() {
+    const messages = [
+        "Czy wiesz, że latarka to wcale nie jest najciekawsza rzecz w tej grze?",
+        "Ktoś tam patrzy... Uważaj!",
+        "Nie bój się, latarka nie pomoże w tej grze... Może tylko w kuchni!",
+        "Możesz kliknąć na latarkę, ale nie obiecuję, że pomoże Ci przetrwać...",
+        "Czy to ciemność, czy tylko moje wyobrażenie?"
+    ];
+    const randomMessage = messages[Math.floor(Math.random() * messages.length)];
+    alert(randomMessage);
 }
 
 function attack() {
@@ -124,9 +142,10 @@ function winNight() {
 function resetGame() {
     clearInterval(batteryInterval);
     currentTime = 0;
-    battery = 100;
+    battery = 100; // Po resecie bateria wraca do 100%
     lightOn = false;
     lightButton.textContent = "Włącz latarkę";
+    lightButton.disabled = false; // Upewniamy się, że latarka będzie włączalna
     batteryBar.style.width = "100%";
     batteryPercentage.textContent = "100%";
     timeLabel.textContent = "00:00";
