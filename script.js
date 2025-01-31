@@ -9,22 +9,16 @@ let nightTitles = [
     "5. Freddie czy to ty?",
     "6. Bal u Freddiego"
 ];
-let nightIndex = 0; // Zmieniamy indeks tytułów nocy
+let nightIndex = 0;
 let batteryInterval;
 let mediaStream;
 
-// Ustawienie tła
-document.body.style.background = "url('https://th.bing.com/th/id/OIP.ytnveQd4rygRjC3qN24NpwHaEK?w=292&h=180&c=7&r=0&o=5&dpr=1.3&pid=1.7') no-repeat center center fixed";
-document.body.style.backgroundSize = "cover";
-document.body.style.backgroundColor = "#000";
+// 🎵 Dodane dźwięki
+let freddyMusic = new Audio('d2.mp3'); // Gdy bateria się wyczerpie
+let nightEndMusic = new Audio('d1.mp3'); // Koniec nocy
+let jumpscareSound = new Audio('d3.mp3'); // Jumpscare przy przegranej
 
-document.getElementById("time").style.position = "absolute";
-document.getElementById("time").style.top = "10px";
-document.getElementById("time").style.right = "10px";
-document.getElementById("time").style.fontSize = "32px";
-document.getElementById("time").style.fontFamily = "Arial, sans-serif";
-document.getElementById("time").style.color = "#fff";
-
+// Pobranie elementów z HTML
 const timeLabel = document.getElementById("time");
 const batteryBar = document.getElementById("battery-bar");
 const batteryPercentage = document.getElementById("battery-percentage");
@@ -59,8 +53,7 @@ function startNight() {
     battery = 100;
     lightOn = false;
     lightButton.textContent = "Włącz latarkę";
-    lightButton.disabled = false; // Upewniamy się, że przy rozpoczęciu nocy latarka może być włączona
-    updateNightTitle(); // Pokazujemy tytuł aktualnej nocy
+    updateNightTitle();
     updateBatteryDisplay();
     updateTime();
     startBatteryDrain(6000);
@@ -87,9 +80,16 @@ function startBatteryDrain(interval) {
             if (battery <= 0) {
                 battery = 0;
                 clearInterval(batteryInterval);
-                lightButton.disabled = true; // Latarka jest wyłączona, gdy bateria rozładowana
-                lightOn = false; // Wyłączamy latarkę
+                lightButton.disabled = true;
+                lightOn = false;
                 togglePhoneFlashlight(false);
+
+                // 🎵 Odtwarzanie muzyki Freddy'ego po rozładowaniu baterii
+                freddyMusic.play();
+                setTimeout(() => {
+                    freddyMusic.pause();
+                    freddyMusic.currentTime = 0;
+                }, 30000);
             }
         }
     }, interval);
@@ -102,38 +102,33 @@ function updateBatteryDisplay() {
 }
 
 function toggleLight() {
-    if (battery > 0 && !lightButton.disabled) { // Latarka działa tylko, jeśli bateria > 0 i latarka nie jest wyłączona
+    if (battery > 0) {
         lightOn = !lightOn;
         lightButton.textContent = lightOn ? "Wyłącz latarkę" : "Włącz latarkę";
         togglePhoneFlashlight(lightOn);
-        startBatteryDrain(lightOn ? 3000 : 6000); // Szybszy drain, jeśli latarka włączona
+        startBatteryDrain(lightOn ? 3000 : 6000);
     }
-
-    // Easter egg: jeśli latarka jest wyłączona, ale kliknięto przycisk, pokaż zabawną wiadomość
-    if (!lightOn) {
-        showEasterEgg();
-    }
-}
-
-function showEasterEgg() {
-    const messages = [
-        "Czy wiesz, że latarka to wcale nie jest najciekawsza rzecz w tej grze?",
-        "Ktoś tam patrzy... Uważaj!",
-        "Nie bój się, latarka nie pomoże w tej grze... Może tylko w kuchni!",
-        "Możesz kliknąć na latarkę, ale nie obiecuję, że pomoże Ci przetrwać...",
-        "Czy to ciemność, czy tylko moje wyobrażenie?"
-    ];
-    const randomMessage = messages[Math.floor(Math.random() * messages.length)];
-    alert(randomMessage);
 }
 
 function attack() {
-    alert("Przegrałeś! Kliknij 'OK' aby zacząć od nowa.");
-    resetGame();
+    jumpscareSound.play(); // 🔊 Odtwarza dźwięk jumpscare'a
+
+    setTimeout(() => {
+        alert("Przegrałeś! Kliknij 'OK' aby zacząć od nowa.");
+        resetGame();
+    }, 1000); // ⏳ Czeka 1 sekundę, żeby jumpscare zagrał przed alertem
 }
 
 function winNight() {
     alert(`Wygrałeś noc! Tytuł nocy: ${nightTitles[nightIndex]}`);
+
+    // 🎶 Odtwarzanie muzyki końca nocy
+    nightEndMusic.play();
+    setTimeout(() => {
+        nightEndMusic.pause();
+        nightEndMusic.currentTime = 0;
+    }, 15000);
+
     nightIndex = (nightIndex + 1) % nightTitles.length;
     updateNightTitle();
     resetGame();
@@ -142,10 +137,9 @@ function winNight() {
 function resetGame() {
     clearInterval(batteryInterval);
     currentTime = 0;
-    battery = 100; // Po resecie bateria wraca do 100%
+    battery = 100;
     lightOn = false;
     lightButton.textContent = "Włącz latarkę";
-    lightButton.disabled = false; // Upewniamy się, że latarka będzie włączalna
     batteryBar.style.width = "100%";
     batteryPercentage.textContent = "100%";
     timeLabel.textContent = "00:00";
