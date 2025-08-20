@@ -1,5 +1,5 @@
 body {
-    background: url('https://wallpapers.com/images/hd/scary-fnaf-pictures-1920-x-1080-3tuqkw3bm3xhqzqc.jpg') no-repeat center center fixed;
+    background: url('obraz.jpg') no-repeat center center fixed;
     background-size: cover;
     color: #fff;
     font-family: 'Arial', sans-serif;
@@ -59,4 +59,5 @@ button:hover {
     top: -300px;
     font-weight: bold;
 }
+
 
