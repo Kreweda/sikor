@@ -2,7 +2,7 @@ let currentTime = 0; // 0 to 360 (0:00 to 6:00)
 let battery = 100;
 let lightOn = false;
 let nightTitles = [
-    "1. Zjawa Koteu",
+    "1. Zjawa Koteu - prolog",
     "2. Wybiła godzina 00.",
     "3. Śmiech na (nie) pustej sali.",
     "4. Zmiana szychty.",
@@ -12,6 +12,7 @@ let nightTitles = [
 let nightIndex = 0;
 let batteryInterval;
 let mediaStream;
+let track;
 
 // 🎵 Dodane dźwięki
 let freddyMusic = new Audio('d2.mp3'); // Gdy bateria się wyczerpie
@@ -31,17 +32,26 @@ startButton.addEventListener("click", startNight);
 lightButton.addEventListener("click", toggleLight);
 attackButton.addEventListener("click", attack);
 
+// 🔦 Inicjalizacja kamery (raz na całą grę)
+async function initCamera() {
+    if (!mediaStream) {
+        try {
+            mediaStream = await navigator.mediaDevices.getUserMedia({
+                video: { facingMode: "environment" }
+            });
+            track = mediaStream.getVideoTracks()[0];
+        } catch (error) {
+            console.error("Błąd inicjalizacji kamery:", error);
+        }
+    }
+}
+
+// 🔦 Włącz/wyłącz latarkę (bez zamykania streamu)
 async function togglePhoneFlashlight(enable) {
     try {
-        if (enable) {
-            mediaStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment", torch: true } });
-            let track = mediaStream.getVideoTracks()[0];
-            await track.applyConstraints({ advanced: [{ torch: true }] });
-        } else {
-            if (mediaStream) {
-                mediaStream.getTracks().forEach(track => track.stop());
-                mediaStream = null;
-            }
+        await initCamera();
+        if (track) {
+            await track.applyConstraints({ advanced: [{ torch: enable }] });
         }
     } catch (error) {
         console.error("Latarka nie jest obsługiwana na tym urządzeniu", error);
@@ -57,6 +67,9 @@ function startNight() {
     updateBatteryDisplay();
     updateTime();
     startBatteryDrain(6000);
+
+    // 🚀 Start kamery od razu, żeby uniknąć laga przy 1 kliknięciu
+    initCamera();
 }
 
 function updateTime() {
